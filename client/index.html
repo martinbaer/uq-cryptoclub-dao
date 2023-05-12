@@ -1,44 +1,17 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
-    <title>UQ CryptoClub</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UQ CryptoClub DAO</title>
 </head>
 
 <body>
-    <section class="section">
-        <div class="container">
-            <h1 class="title">UQ CryptoClub</h1>
+    <button id="connectButton">Connect to MetaMask</button>
+    <h2 id="account"></h2>
 
-            <div class="field">
-                <label class="label">Name</label>
-                <div class="control">
-                    <input class="input" type="text" id="name" placeholder="Your name">
-                </div>
-            </div>
-
-            <div class="field is-grouped">
-                <div class="control">
-                    <button class="button is-link" id="signupButton">Sign Up</button>
-                </div>
-                <div class="control">
-                    <button class="button is-link is-light" id="voteButton">Vote</button>
-                </div>
-            </div>
-
-            <div class="field">
-                <label class="label">Voters List</label>
-                <div class="control">
-                    <textarea class="textarea" id="list" placeholder="List of voters" disabled></textarea>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.2.7-rc.0/web3.min.js"></script>
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 
 </html>

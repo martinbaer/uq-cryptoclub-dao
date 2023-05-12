@@ -1,42 +1,28 @@
-const CONTRACT_ADDRESS = "TODO";
-const CONTRACT_ABI = [];
+import { ethers } from "./ethers.min.js";
 
+document.addEventListener('DOMContentLoaded', async () => {
 
-window.addEventListener("load", async () => {
-    // Modern dapp browsers...
-    if (window.ethereum) {
-        window.web3 = new Web3(ethereum);
-        try {
-            // Request account access if needed
-            await ethereum.enable();
-        } catch (error) {
-            // User denied account access...
-            console.error("User denied account access")
-        }
+    if (typeof window.ethereum !== 'undefined') {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const connectButton = document.getElementById('connectButton');
+        const accountElement = document.getElementById('account');
+
+        connectButton.addEventListener('click', async () => {
+            try {
+                console.log("connected: ", window.ethereum.isConnected())
+                // Request account access
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+                // Fetch account from provider
+                const signer = await provider.getSigner();
+                console.log("signer: ", signer);
+                const account = await signer.getAddress();
+                accountElement.innerHTML = `Connected: ${account}`;
+            } catch (error) {
+                console.error(error);
+            }
+        });
+    } else {
+        console.log('No Ethereum browser extension detected, install MetaMask on desktop or visit from a dApp browser on mobile.');
     }
-    // Non-dapp browsers
-    else {
-        console.error("Non-Ethereum browser detected. You should consider trying MetaMask!");
-    }
-    startApp();
 });
-
-async function startApp() {
-    const accounts = await web3.eth.getAccounts();
-
-    const contract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
-
-    document.getElementById("signupButton").addEventListener("click", async () => {
-        const name = document.getElementById("name").value;
-        await contract.methods.sign_up(name).send({ from: accounts[0] });
-    });
-
-    document.getElementById("voteButton").addEventListener("click", async () => {
-        const name = document.getElementById("name").value;
-        await contract.methods.vote(name).send({ from: accounts[0] });
-    });
-
-    // Get the voters list from the blockchain
-    const list = await contract.methods.get_list().call({ from: accounts[0] });
-    document.getElementById("list").value = list.join("\n");
-}
