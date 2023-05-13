@@ -1,4 +1,4 @@
-const CONTRACT_ADDRESS = "0x1De33b730240B423aB4270E3ABf48035B0e311c1";
+const CONTRACT_ADDRESS = "0x85739Bc42b27A95C5695781e4380Aa89F631Ef6D";
 
 document.addEventListener("DOMContentLoaded", async () => {
 
@@ -282,6 +282,45 @@ document.addEventListener("DOMContentLoaded", async () => {
                 if (approvedPaymentsList.innerHTML == "") {
                     approvedPaymentsList.innerHTML = "No approved payments";
                 }
+
+                // PRESIDENT VOTING SECTION
+                const startElectionForm = document.getElementById("startElection");
+                if (await contract.isElectionVotingOpen()) {
+                    // hide
+                    startElectionForm.style.display = "none";
+                }
+                startElectionForm.addEventListener("submit", async (event) => {
+                    event.preventDefault();
+                    const startElection = await contract.voteStartElection();
+                    console.log("startElection: ", startElection);
+                }
+                );
+
+                // vote got president
+                const presidentVoteForm = document.getElementById("presidentVote");
+                if (!await contract.isElectionVotingOpen()) {
+                    // hide
+                    presidentVoteForm.style.display = "none";
+                }
+                presidentVoteForm.addEventListener("submit", async (event) => {
+                    event.preventDefault();
+                    const presidentVote = await contract.voteForPresident(presidentVoteForm.candidate.value);
+                    console.log("presidentVote: ", presidentVote);
+                }
+                );
+
+                // finalize election
+                const finalizeElectionForm = document.getElementById("finalizeElection");
+                if (!await contract.isElectionVotingOpen()) {
+                    // hide
+                    finalizeElectionForm.style.display = "none";
+                }
+                finalizeElectionForm.addEventListener("submit", async (event) => {
+                    event.preventDefault();
+                    const finalizeElection = await contract.finalizeElection();
+                    console.log("finalizeElection: ", finalizeElection);
+                });
+
 
 
 

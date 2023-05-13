@@ -127,6 +127,55 @@
                 <h2 class="title is-5"><i class="fa-solid fa-credit-card"></i> Approved Payments</h2>
                 <ul id="approvedPaymentList"></ul>
 
+                <!-- // PRESIDENT VOTING SECTION
+                const startElectionForm = document.getElementById("startElection");
+                startElectionForm.addEventListener("submit", async (event) => {
+                    event.preventDefault();
+                    const startElection = await contract.voteStartElection();
+                    console.log("startElection: ", startElection);
+                }
+                ); -->
+
+                <br />
+                <hr class="is-divider">
+                <br />
+                <h2 class="title is-5"><i class="fa-solid fa-crown"></i> President Voting</h2>
+                <form id="startElection">
+                    <div class="field">
+                        <label class="label">Start election</label>
+                        <div class="control">
+                            <button class="button is-link" type="submit" id="startElectionButton">Start
+                                election</button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- // vote got president
+                const presidentVoteForm = document.getElementById("presidentVote");
+                presidentVoteForm.addEventListener("submit", async (event) => {
+                    event.preventDefault();
+                    const presidentVote = await contract.voteForPresident(presidentVoteForm.candidate.value);
+                    console.log("presidentVote: ", presidentVote);
+                }
+                ); -->
+                <!-- text input for address -->
+
+                <form id="presidentVote">
+                    <div class="field">
+                        <label class="label">Vote for president</label>
+                        <div class="control">
+                            <input class="input" type="text" id="presidentVoteAddress"
+                                placeholder="Enter candidate address">
+                        </div>
+                        <div class="control">
+                            <button class="button is-link" type="submit" id="presidentVoteButton">Vote for
+                                president</button>
+                        </div>
+                    </div>
+                </form>
+
+
+
 
 
             </div>
