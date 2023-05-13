@@ -25,6 +25,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const contract = new ethers.Contract(CONTRACT_ADDRESS, contract_abi, signer);
                 console.log("contract: ", contract);
 
+                // DISPLAY PRESIDENT
+                // <p id="president"></p>
+                const president = await contract.viewPresident();
+                console.log("president: ", president);
+                const presidentDiv = document.getElementById("president");
+                presidentDiv.innerHTML = `President: ${president.addressOfMember} - ${president.name}`;
+
                 // CREATE MEMBER LIST
                 const members = await contract.viewAllMembers();
                 console.log("members: ", members);
