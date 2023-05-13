@@ -9,13 +9,39 @@
 </head>
 
 <body>
+
+    <h1>UQ CryptoClub DAO</h1>
     <!-- connect with metamask -->
     <label id="connectMetamaskLabel">Set MetaMask's network to Optimism Goerli Testnet</label>
     <button id="connectMetamaskButton">Connect with MetaMask</button>
-    <h4>Members</h4>
-    <ul id="membersList"></ul>
 
-    <script type="module" src="app.js"></script>
+
+
+    <form id="signUp" style="display:none">
+        <label>Enter name to join</label>
+        <input type="text" id="nameInput" placeholder="Enter name">
+        <button type="submit" id="signUpButton">Sign up</button>
+    </form>
+    <div id="connectedScreen" style="display:none">
+        <!-- membership status -->
+
+        <p id="myName"></p>
+
+        <h2>Events</h2>
+        <form id="createEvent">
+            <label>Create event</label> <br />
+            <input type="text" id="createEventTitle" placeholder="Enter title"> <br />
+            <textarea id="createEventDescription" placeholder="Enter description"></textarea> <br />
+            <button type="submit" id="createEventButton">Create event</button>
+        </form>
+        <ul id="eventList"></ul>
+
+        <h2>Members</h2>
+        <ul id="membersList"></ul>
+
+        <script type="module" src="app.js"></script>
+
+    </div>
 </body>
 
 </html>
