@@ -9,7 +9,7 @@ contract cryptoDAO {
 
 // structs
 
-    /* represents a poll */
+    /* represents something the community can vote on */
     struct Status {
         bool initialized;
         uint256 votes;
@@ -18,13 +18,15 @@ contract cryptoDAO {
 
     /* represents a club member
        Includes member address, member name, voting power, 
-       votes to induct member into club, and record of who has voted for them already */
+       votes to induct member into club, and if they're an approved member */
     struct ClubMember {
+        uint256 id;
         address addressOfMember;
         string name;
         uint256 votes;
         Status status;
     }
+    // record of who has voted to approve a member already 
     mapping (address => mapping (address => uint256)) membershipVotesForFrom;
 
     /* Represents a club event, like a picnic or bbq */
@@ -32,10 +34,12 @@ contract cryptoDAO {
         uint256 id;
         string title;
         string description;
-        address creator;
-        address[] members;
+        ClubMember creator;
+        ClubMember[] members;
         bool stillOpen;
     }
+    // does the event's `members` contin given user
+    mapping (uint256 => mapping (address => uint256)) doesEventContainMember;
 
     /* Represents a proposed change for the club. 
        Change will be approved on-chain and carried out off-chain. */
@@ -70,43 +74,52 @@ contract cryptoDAO {
         uint256 endTime;
         Status status;
         bool votingEnabled;
-        address[] candidates;
-        mapping (address => uint256) votesReceivedByCandidate;
-        mapping (address => address) userVotedForCandidate;
+        ClubMember[] candidates;
+        ClubMember winner;
     }
+    // votes to start election for given election from given user
     mapping (uint256 => mapping (address => uint256)) electionVotesForFrom;
+    // president votes for given election for given candidate
+    mapping (uint256 => mapping (address => uint256)) presidentVotesForFor;
+    // president vote for given election from given voter
+    mapping (uint256 => mapping (address => address)) presidentVoteForFrom;
 
 // end structs
 
     // MEMBERS AND VOTING
 
     ClubMember[] members;
-    mapping (address => ClubMember) addressToClubMember;
+    mapping (address => uint256) addressToMemberID;
     uint256 public totalVotes = 0;
+    uint256 numMembers;
     event joinRequest(address member, string name);
     event newMemberAccepted(string name);
+    uint256 nextDecay;
 
     // CHANGES 
-    mapping (uint256 => ClubChange) clubChanges; // id => clubChange
+    ClubChange[] clubChanges; 
     uint256 changesCount = 0;
     event changeAccepted(uint256 id);
 
     // EVENTS
     ClubEvent[] events;
+    uint eventId = 0;
 
     // ELECTIONS
-    address president;
+    ClubMember president;
+    Election[] elections;
     Election election;
     uint256 electionId = 0;
 
     // MONEY
-    ClubPayment[] clubPayments; // 
+    ClubPayment[] clubPayments;  
     uint256 public paymentsCount = 0;
     event paymentAccepted(uint256 id);
 
 
+
     modifier approvedOnly {
-        require(addressToClubMember[msg.sender].status.approved, "you are not an approved member");
+        require(addressToClubMember(msg.sender).status.approved, "you are not an approved member");
         _;
     }
 
@@ -116,21 +129,21 @@ contract cryptoDAO {
         membership.votes = 1;
         membership.approved = true;
 
-        ClubMember memory creator = ClubMember(msg.sender, "satoshi", 1, membership);
+        ClubMember memory creator = ClubMember(0, msg.sender, "satoshi", 1, membership);
         members.push(creator);
+        addressToMemberID[msg.sender] = 0;
 
-        president = msg.sender;
+        president = creator;
+        election.status.initialized = true;
         totalVotes = 1;
+        numMembers = 1;
+        // DEMO
+        nextDecay = block.timestamp + 600;
     }
 
 
-    // function viewAllMemberNames() public view returns (string[] memory) {
-    //     string[] memory names = new string[](members.length);
-    //     for (uint i = 0; i < members.length; i++) {
-    //         names[i] = memberAddressToName[members[i]];
-    //     }
-    //     return names;
-    // }
+
+
 
     // ===================================    MEMBERS    =================================== //
 
@@ -142,27 +155,41 @@ contract cryptoDAO {
         membership.votes = 0;
         membership.approved = false;
 
-        ClubMember memory newMember = ClubMember(msg.sender, name, 0, membership);
+        ClubMember memory newMember = ClubMember(numMembers, msg.sender, name, 0, membership);
         members.push(newMember);
 
+        // members[numMembers].id = numMembers;
+        // members[numMembers].addressOfMember = msg.sender;
+        // members[numMembers].name = "name";
+        // members[numMembers].votes = 0;
+        // members[numMembers].status.initialized = true;
+        // members[numMembers].status.votes = 0;
+        // members[numMembers].status.approved = false;
+        addressToMemberID[msg.sender] = numMembers;
+
+        numMembers++;
         emit joinRequest(msg.sender, name);
+    }
+
+    function addressToClubMember(address memberAddress) public view returns (ClubMember memory) {
+        return members[addressToMemberID[memberAddress]];
     }
 
     function voteToAddMember(address newMemberAddress) external approvedOnly {
 
-        ClubMember memory newMember = addressToClubMember[newMemberAddress];
+        uint256 id = addressToClubMember(newMemberAddress).id;
         // if the current member has not yet cast a vote to induct the new member
         require(membershipVotesForFrom[newMemberAddress][msg.sender] == 0, "you have already voted to add this user");
         // cast the votes
-        newMember.status.votes += userVotes(msg.sender);
+        members[id].status.votes += userVotes(msg.sender);
         membershipVotesForFrom[newMemberAddress][msg.sender] = userVotes(msg.sender);
 
-        if (newMember.status.votes > totalVotes/2 && !newMember.status.approved) {
-            newMember.status.approved = true;
-            newMember.votes = 1;
-            members.push(newMember);
+        if (members[id].status.votes > totalVotes/2 && !members[id].status.approved) {
+            members[id].status.approved = true;
+            members[id].votes = 1;
+            // addressToClubMember[msg.sender] = newMember;
             totalVotes++;
-            emit newMemberAccepted(newMember.name);
+            emit newMemberAccepted(members[id].name);
         }
         
     }
@@ -172,38 +199,41 @@ contract cryptoDAO {
     }
 
     function viewMemberInfo(address user) public view returns (ClubMember memory) {
-        return addressToClubMember[user];
+        return addressToClubMember(user);
     }
 
     function userVotes(address userAddress) public view returns (uint256) {
-        return addressToClubMember[userAddress].votes;
+        return addressToClubMember(userAddress).votes;
     }
+
+
+
 
 
     // ===================================    CLUB EVENTS    =================================== //
 
     // create a new event for the club which contains the creator, attendees, and whether it's still open.
-    function createEvent(string memory title, string memory description) external approvedOnly returns (ClubEvent memory) {
-        ClubEvent memory newEvent;
-        newEvent.title = title;
-        newEvent.description = description;
-        newEvent.creator = msg.sender;
-        newEvent.stillOpen = true;
-        events.push(newEvent);
-        return newEvent;
+    function createEvent(string memory title, string memory description) external approvedOnly {
+        events[eventId].id = eventId;
+        events[eventId].title = title;
+        events[eventId].description = description;
+        events[eventId].creator = addressToClubMember(msg.sender);
+        events[eventId].stillOpen = true;
+        events[eventId].members.push(addressToClubMember(msg.sender));
+        eventId++;
     }
 
     function joinEvent(uint256 id) external approvedOnly {
         require(events[id].stillOpen, "event closed");
-        events[id].members.push(msg.sender);
-        if (addressToClubMember[events[id].creator].votes < 10) {
-            addressToClubMember[events[id].creator].votes++; // increases event creators voting weight
+        events[id].members.push(addressToClubMember(msg.sender));
+        if (events[id].creator.votes < 10) {
+            events[id].creator.votes++; // increases event creators voting weight
             totalVotes++;
         }
     }
 
     function closeEvent(uint256 id) external approvedOnly {
-        require(msg.sender == events[id].creator);
+        require(msg.sender == events[id].creator.addressOfMember, "you are not the event creator");
         events[id].stillOpen = false;
     }
 
@@ -223,22 +253,14 @@ contract cryptoDAO {
         return events[id].description;
     }
 
-    function viewEventAttendees(uint256 id) external view returns (address[] memory) {
+    function viewEventAttendees(uint256 id) external view returns (ClubMember[] memory) {
         return events[id].members;
     }
 
 
-    // function viewOpenEvents() external view returns (ClubEvent[] memory) {
-    //     ClubEvent[] memory openEvents = new ClubEvent[](events.length);
-    //     uint count = 0;
-    //     for (uint i = 0; i < events.length; i++) {
-    //         if (events[i].stillOpen) {
-    //             openEvents[count] = events[i];
-    //             count++;
-    //         }
-    //     }
-    //     return openEvents;
-    // }
+
+
+
     // ===================================    CLUB CHANGES    =================================== //
 
 
@@ -269,16 +291,15 @@ contract cryptoDAO {
         }
     }
 
-    // PAYMENTS //
+    function viewAllChanges() public view returns (ClubChange[] memory) {
+        return clubChanges;
+    }
 
-    // struct ClubPayment {
-    //     uint256 id;
-    //     address recipient;
-    //     uint256 amount;
-    //     string paymentDescription;
-    //     uint256 votes;
-    //     bool approved;
-    // }
+
+
+
+    // ===================================    CLUB PAYMENTS    =================================== //
+
 
     function proposeSpendClubETH(address recipient, uint256 amount, string memory description) external approvedOnly {
         uint256 id = paymentsCount;
@@ -308,26 +329,104 @@ contract cryptoDAO {
         }
     }
 
-    function viewAllSpendETHProposals() public view returns (ClubPayment[] memory) {
+    function viewAllClubPayments() public view returns (ClubPayment[] memory) {
         return clubPayments;
     }
 
-    function viewSpendETHProposal(uint256 id) public view returns (ClubPayment memory) {
+    function viewClubPayment(uint256 id) public view returns (ClubPayment memory) {
         return clubPayments[id];
     }
 
-    function viewSpendETHProposalDescription(uint256 proposalId) public view returns (string memory) {
+    function viewPaymentDescription(uint256 proposalId) public view returns (string memory) {
         return clubPayments[proposalId].description;
     }
 
-    function viewSpendETHProposalVotes(uint256 proposalId) public view returns (uint256) {
+    function viewPaymentVotes(uint256 proposalId) public view returns (uint256) {
         return clubPayments[proposalId].status.votes;
     }
 
-    // function voteStartElection(bool start) external approvedOnly {
-    //     if ()
-    //     election.
-    // }
+
+
+
+
+    // ===================================    CLUB CHANGES    =================================== //
+
+
+    function voteStartElection() external approvedOnly {
+        // if user has not yet voted
+        require(electionVotesForFrom[electionId][msg.sender] == 0, "you have already voted to start this election");
+        election.status.votes += userVotes(msg.sender);
+        electionVotesForFrom[electionId][msg.sender] = userVotes(msg.sender);
+        if (election.status.votes > totalVotes/2) {
+            election.votingEnabled = true;
+            election.startTime = block.timestamp;
+            election.endTime = block.timestamp + 30 days;
+        }
+    }
+
+    function finalizeElection() external approvedOnly {
+        require(election.votingEnabled, "election has not started yet");
+        require(block.timestamp > election.endTime, "election has not finished yet");
+        uint mostVotes = 0;
+        address winnerAddress;
+        for (uint i = 0; i < election.candidates.length; i++) {
+            uint votesForCandidate = presidentVotesForFor[electionId][election.candidates[i].addressOfMember];
+            if (votesForCandidate > mostVotes) {
+                winnerAddress = election.candidates[i].addressOfMember;
+                mostVotes = votesForCandidate;
+            }
+        }
+        president = mostVotes > 0 ? addressToClubMember(winnerAddress) : president;
+        election.winner = president;
+        elections[electionId] = election;
+
+
+        electionId++;
+        election = elections[electionId];
+        election.electionId = electionId;
+        election.status.initialized = true;
+    }
+
+    function voteForPresident(address candidate) external approvedOnly {
+        require(election.votingEnabled && block.timestamp < election.endTime, "election is not active");
+        require(addressToClubMember(candidate).status.approved, "cannot vote for a non-approved member");
+        require(presidentVoteForFrom[electionId][msg.sender] == address(0), "you have already voted!");
+
+        if (presidentVotesForFor[electionId][candidate] == 0) {
+            election.candidates.push(addressToClubMember(candidate));
+        }
+        presidentVotesForFor[electionId][candidate] += userVotes(msg.sender);
+        presidentVoteForFrom[electionId][msg.sender] = candidate;
+    
+    }
+
+    function viewAllElections() public view returns (Election[] memory) {
+        return elections;
+    }
+
+    function viewAllCandidates() public view returns (ClubMember[] memory) {
+        return election.candidates;
+    }
+
+
+
+
+    // ===================================    VOTING DECAY    =================================== //
+
+
+    function triggerYearlyDecay() external approvedOnly {
+        require(checkIfReadyToDecay(), "next decay has not come yet");
+        for (uint i = 1; i < members.length; i++) {
+            members[i].votes = members[i].votes > 0 ? members[i].votes - 1 : 0;
+        }
+        // DEMO
+        nextDecay = nextDecay + 600;
+    }
+
+    function checkIfReadyToDecay() public view returns (bool) {
+        return block.timestamp > nextDecay;
+    }
+
 
     // struct Election {
     //     uint256 electionId;
@@ -338,9 +437,6 @@ contract cryptoDAO {
     //     mapping (address => uint256) presidentVotes;
     // }
 
-    // function voteForPresident(address candidate) external approvedOnly {
-
-    // }
 
 
 }
