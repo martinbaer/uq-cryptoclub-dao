@@ -8,8 +8,8 @@
     <script src="https://kit.fontawesome.com/266cbac5f5.js" crossorigin="anonymous"></script>
     <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js" type="application/javascript"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.4/css/bulma.min.css"
-        integrity="sha512-HqxHUkJM0SYcbvxUw5P60SzdOTy/QVwA1JJrvaXJv4q7lmbDZCmZaqz01UPOaQveoxfYRv1tHozWGPMcuTBuvQ=="
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    integrity="sha512-HqxHUkJM0SYcbvxUw5P60SzdOTy/QVwA1JJrvaXJv4q7lmbDZCmZaqz01UPOaQveoxfYRv1tHozWGPMcuTBuvQ=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         .is-divider {
             background-color: #363636;
@@ -25,7 +25,7 @@
             <p id="myName"></p>
             <p id="president"></p>
             <button class="button" id="connectMetamaskButton">Connect with MetaMask</button>
-
+            
             <form id="signUp" style="display:none">
                 <div class="field">
                     <label class="label">Enter name to join</label>
@@ -37,164 +37,207 @@
                     <button class="button is-link" type="submit" id="signUpButton">Sign up</button>
                 </div>
             </form>
-
-
+            
+            
             <div id="connectedScreen" style="display:none">
                 <hr class="is-divider">
                 <h2 class="title is-5"><i class="fa-regular fa-user"></i> Unapproved Members</h2>
                 <ul id="unapprovedMembersList"></ul>
-
+                
                 <br />
                 <p class="title is-5"><i class="fa-solid fa-user"></i> Members</p>
                 <ul id="membersList"></ul>
-
+                
                 <!-- breaking line -->
-
+                
                 <hr class="is-divider">
                 <br />
-                <h2 class="title is-5"><i class="fa-solid fa-scale-balanced"></i> Proposed Changes</h2>
+                
+                
+                <!-- EVENTS -->
+                <h2 class="title is-4 mt-2"><i class="fa-solid fa-calendar-days"></i></i> Club Events</h2>
+                <form id="createEvent">
+                    <div class="field">
+                        <label class="label">Create event</label>
+                        <div class="control">
+                            <input class="input my-2" type="text" id="createEventTitle" placeholder="Enter title">
+                        </div>
+                        <div class="control">
+                            <textarea class="textarea my-2" id="createEventDescription"
+                            placeholder="Enter description"></textarea>
+                        </div>
+                        <div class="control">
+                            <button class="button is-link my-2" type="submit" id="createEventButton">Create event</button>
+                        </div>
+                    </div>
+                </form>
+                
+                <h2 class="title is-5 mt-5"><i class="fa-solid fa-calendar-days"></i></i> Open Events</h2>
+                
+                <ul id="eventList"></ul>
+                <div id="eventList2"></div>
+                
+                <br />
+                <h2 class="title is-5 mt-3"><i class="fa-solid fa-calendar-check"></i> Closed Events</h2>
+                <ul id="closedEventList"></ul>
+                <form id="closeEvent">
+                    <label class="label  mt-4 mb-1">Close an event</label>
+                    <input type="text" class="input my-2" id="closeEventInput" placeholder="Enter event ID">
+                    <button class="button is-link" type="submit" id="closeEventButton">Close event</button>
+                </form>
+                
+                
+                
+                <br />
+                
+                <!-- CHANGES -->
+                <hr class="is-divider">
+                <br />
+                <h1 class="title is-4"><i class="fa-solid fa-scale-balanced"></i> Changes</h1>
                 <form id="createChangeForm">
                     <div class="field">
                         <label class="label">Propose change</label>
                         <div class="control">
                             <textarea class="textarea" id="createChangeDescription"
-                                placeholder="Enter description"></textarea>
+                            placeholder="Enter description"></textarea>
                         </div>
                         <div class="control">
-                            <button class="button is-link" type="submit" id="createChangeButton">Propose
-                                change</button>
+                            <button class="button is-link mt-2" type="submit" id="createChangeButton">Propose change</button>
                         </div>
                     </div>
                 </form>
                 <br />
+                <h2 class="title is-5"><i class="fa-solid fa-scale-balanced"></i> Proposed Changes</h2>
                 <ul id="changeList"></ul>
-
+                
                 <br />
                 <h2 class="title is-5"><i class="fa-solid fa-scale-unbalanced-flip"></i> Approved Changes</h2>
                 <ul id="approvedChangeList"></ul>
-
+                
+                
+                <!-- PAYMENTS -->
+                <br />
                 <hr class="is-divider">
                 <br />
-                <h2 class="title is-5"><i class="fa-solid fa-calendar-days"></i></i> Current Events</h2>
-                <form id="createEvent">
-                    <div class="field">
-                        <label class="label">Create event</label>
-                        <div class="control">
-                            <input class="input" type="text" id="createEventTitle" placeholder="Enter title">
-                        </div>
-                        <div class="control">
-                            <textarea class="textarea" id="createEventDescription"
-                                placeholder="Enter description"></textarea>
-                        </div>
-                        <div class="control">
-                            <button class="button is-link" type="submit" id="createEventButton">Create event</button>
-                        </div>
-                    </div>
-                </form>
-                <br />
-
-                <ul id="eventList"></ul>
-
-
-                <br />
-                <h2 class="title is-5"><i class="fa-solid fa-calendar-check"></i> Closed Events</h2>
-                <ul id="closedEventList"></ul>
-
-
-                <hr class="is-divider">
-                <br />
-                <h2 class="title is-5"><i class="fa-regular fa-credit-card"></i> Unapproved Payments</h2>
+                <h2 class="title is-4"><i class="fa-regular fa-credit-card"></i> Payments</h2>
                 <form id="createPayment">
                     <div class="field">
-                        <label class="label">Propose payment</label>
-                        <div class="control">
+                        <label class="label mt-2">Propose payment</label>
+                        <div class="control my-2 ">
                             <input class="input" type="text" id="createPaymentRecipient"
-                                placeholder="Enter recipient address">
+                            placeholder="Enter recipient address">
                         </div>
-                        <div class="control">
+                        <div class="control my-2">
                             <input class="input" type="text" id="createPaymentAmount" placeholder="Enter amount">
                         </div>
-                        <div class="control">
-                            <textarea class="textarea" id="createPaymentDescription"
-                                placeholder="Enter description"></textarea>
+                        <div class="control my-2">
+                            <textarea class="textarea" id="createPaymentDescription" placeholder="Enter description"></textarea>
                         </div>
-                        <div class="control">
-                            <button class="button is-link" type="submit" id="createPaymentButton">Propose
-                                payment</button>
+                        <div class="control mt-2 mb-5">
+                            <button class="button is-link" type="submit" id="createPaymentButton">Propose payment</button>
                         </div>
                     </div>
                 </form>
+                <h2 class="title is-5"><i class="fa-regular fa-credit-card"></i> Unapproved Payments</h2>
                 <ul id="paymentList"></ul>
-
+                
                 <br />
                 <h2 class="title is-5"><i class="fa-solid fa-credit-card"></i> Approved Payments</h2>
                 <ul id="approvedPaymentList"></ul>
-
+                
                 <!-- // PRESIDENT VOTING SECTION
-                const startElectionForm = document.getElementById("startElection");
-                startElectionForm.addEventListener("submit", async (event) => {
-                    event.preventDefault();
-                    const startElection = await contract.voteStartElection();
-                    console.log("startElection: ", startElection);
-                }
-                ); -->
-
+                    const startElectionForm = document.getElementById("startElection");
+                    startElectionForm.addEventListener("submit", async (event) => {
+                        event.preventDefault();
+                        const startElection = await contract.voteStartElection();
+                        console.log("startElection: ", startElection);
+                    }
+                -->
+                
                 <br />
                 <hr class="is-divider">
                 <br />
                 <h2 class="title is-5"><i class="fa-solid fa-crown"></i> President Voting</h2>
                 <form id="startElection">
                     <div class="field">
-                        <label class="label">Start election</label>
+                        <label class="label" id="startElectionLabel">Start election</label>
                         <div class="control">
-                            <button class="button is-link" type="submit" id="startElectionButton">Start
-                                election</button>
+                            <button class="button is-link" type="submit" id="startElectionButton">Start Election</button>
                         </div>
                     </div>
                 </form>
-
-                <!-- // vote got president
-                const presidentVoteForm = document.getElementById("presidentVote");
-                presidentVoteForm.addEventListener("submit", async (event) => {
-                    event.preventDefault();
-                    const presidentVote = await contract.voteForPresident(presidentVoteForm.candidate.value);
-                    console.log("presidentVote: ", presidentVote);
-                }
-                ); -->
-                <!-- text input for address -->
-
-                <form id="presidentVote">
-                    <div class="field">
-                        <label class="label">Vote for president</label>
-                        <div class="control">
-                            <input class="input" type="text" id="presidentVoteAddress"
-                                placeholder="Enter candidate address">
+                
+                <!-- // vote for president
+                    const presidentVoteForm = document.getElementById("presidentVote");
+                    presidentVoteForm.addEventListener("submit", async (event) => {
+                        event.preventDefault();
+                        const presidentVote = await contract.voteForPresident(presidentVoteForm.candidate.value);
+                        console.log("presidentVote: ", presidentVote);
+                    } -->
+                    
+                    <!-- text input for address -->
+                    
+                    <form id="presidentVote">
+                        <div class="field">
+                            <label class="label">Vote for president</label>
+                            <div class="control">
+                                <input class="input" type="text" id="presidentVoteAddress" placeholder="Enter candidate address">
+                            </div>
+                            <div class="control">
+                                <button class="button is-link" type="submit" id="presidentVoteButton">Vote for president</button>
+                            </div>
                         </div>
-                        <div class="control">
-                            <button class="button is-link" type="submit" id="presidentVoteButton">Vote for
-                                president</button>
+                    </form>
+                    
+                    <!-- finalise election form -->
+                    <form id="finalizeElection">
+                        <div class="field">
+                            <label class="label">Finalise election</label>
+                            <div class="control">
+                                <button class="button is-link" type="submit" id="finalizeElectionButton">Finalise Election</button>
+                            </div>
                         </div>
-                    </div>
-                </form>
-
-                <!-- finalise election form -->
-                <form id="finalizeElection">
-                    <div class="field">
-                        <label class="label">Finalise election</label>
-                        <div class="control">
-                            <button class="button is-link" type="submit" id="finaliseElectionButton">Finalise
-                                election</button>
+                    </form>
+                    
+                    
+                    <!-- VOTE DECAY -->
+                    
+                    <br />
+                    <hr class="is-divider">
+                    <br />
+                    <h2 class="title is-5"><i class="fa-solid fa-skull"></i> Voting Decay</h2>
+                    <form id="votingDecay">
+                        <div class="field">
+                            <label class="label">Decay</label>
+                            <div class="control">
+                                <button class="button is-link" type="submit" id="votingDecayButton">Decay Votes</button>
+                            </div>
                         </div>
-                    </div>
-                </form>
+                    </form> 
 
 
-
-
+                    <!-- MORE INFO -->
+                    
+                    <br />
+                    <hr class="is-divider">
+                    <br />
+                    <h2 class="title is-5"><i class="fa-solid fa-user"></i> User Lookup</h2>
+                    <form id="userLookup">
+                        <div class="field">
+                            <label class="label">Lookup By Address</label>
+                            <div class="control">
+                                <input class="input" type="text" id="userLookupAddress" placeholder="Enter user address">
+                            </div>
+                            <div class="control">
+                                <button class="button is-link my-2" type="submit" id="userLookupButton"> Enter</button>
+                            </div>
+                        </div>
+                    </form> 
+                    
+                </div>
             </div>
-        </div>
-    </section>
-    <script type="module" src="app.js"></script>
-</body>
-
-</html>
+        </section>
+        <script type="module" src="app.js"></script>
+    </body>
+    
+    </html>

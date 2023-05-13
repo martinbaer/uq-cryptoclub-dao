@@ -78,11 +78,11 @@ contract cryptoDAO {
         address winner;
     }
     // votes to start election for given election from given user
-    mapping (uint256 => mapping (address => uint256)) electionVotesForFrom;
+    mapping (uint256 => mapping (address => uint256)) public electionVotesForFrom;
     // president votes for given election for given candidate
-    mapping (uint256 => mapping (address => uint256)) presidentVotesForFor;
+    mapping (uint256 => mapping (address => uint256)) public presidentVotesForFor;
     // president vote for given election from given voter
-    mapping (uint256 => mapping (address => address)) presidentVoteForFrom;
+    mapping (uint256 => mapping (address => address)) public presidentVoteForFrom;
 
 // end structs
 
@@ -111,7 +111,7 @@ contract cryptoDAO {
     // ELECTIONS
     address president;
     Election[] elections;
-    Election election;
+    Election public election;
     uint256 electionId = 0;
 
     // MONEY
@@ -374,7 +374,7 @@ contract cryptoDAO {
             election.votingEnabled = true;
             election.startTime = block.timestamp;
             // DEMO
-            election.endTime = block.timestamp + 60;
+            election.endTime = block.timestamp + 120;
         }
     }
 
@@ -405,17 +405,21 @@ contract cryptoDAO {
         }
         president = mostVotes > 0 ? winnerAddress : president;
         election.winner = president;
-        elections[electionId] = election;
+        elections.push(election);
 
 
+        delete election;
         electionId++;
-        election = elections[electionId];
         election.electionId = electionId;
         election.status.initialized = true;
     }
 
     function viewPresident() public view returns (ClubMember memory) {
         return addressToClubMember(president);
+    }
+
+    function viewCurrentElection() public view returns (Election memory) {
+        return election;
     }
 
     function viewAllElections() public view returns (Election[] memory) {
@@ -427,8 +431,13 @@ contract cryptoDAO {
     }
 
     function isElectionVotingOpen() public view returns (bool) {
-        return election.votingEnabled;
+        return election.votingEnabled && block.timestamp < election.endTime;
     }
+
+    function isElectionWaitingToBeFinalized() public view returns (bool) {
+        return election.votingEnabled && block.timestamp > election.endTime;
+    }
+
 
 
 
@@ -436,7 +445,7 @@ contract cryptoDAO {
     // ===================================    VOTING DECAY    =================================== //
 
 
-    function triggerYearlyDecay() external approvedOnly {
+    function triggerVotesDecay() external approvedOnly {
         require(checkIfReadyToDecay(), "next decay has not come yet");
         // dont let satoshi fall below one vote, for security reasons
         members[0].votes = members[0].votes == 1 ? 1 : members[0].votes - 1;
