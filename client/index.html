@@ -5,43 +5,134 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UQ CryptoClub DAO</title>
+    <script src="https://kit.fontawesome.com/266cbac5f5.js" crossorigin="anonymous"></script>
     <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js" type="application/javascript"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.4/css/bulma.min.css"
+        integrity="sha512-HqxHUkJM0SYcbvxUw5P60SzdOTy/QVwA1JJrvaXJv4q7lmbDZCmZaqz01UPOaQveoxfYRv1tHozWGPMcuTBuvQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        .is-divider {
+            background-color: #363636;
+        }
+    </style>
 </head>
 
 <body>
+    <section class="section">
+        <div class="container">
+            <h1 class="title is-1">UQ CryptoClub DAO <i class="fa-solid fa-fingerprint"></i></h1> <br />
+            <p id="connectMetamaskLabel">Set MetaMask's network to Optimism Goerli Testnet</p>
+            <p id="myName"></p>
+            <button class="button" id="connectMetamaskButton">Connect with MetaMask</button>
 
-    <h1>UQ CryptoClub DAO</h1>
-    <!-- connect with metamask -->
-    <label id="connectMetamaskLabel">Set MetaMask's network to Optimism Goerli Testnet</label>
-    <button id="connectMetamaskButton">Connect with MetaMask</button>
+            <form id="signUp" style="display:none">
+                <div class="field">
+                    <label class="label">Enter name to join</label>
+                    <div class="control">
+                        <input class="input" type="text" id="nameInput" placeholder="Enter name">
+                    </div>
+                </div>
+                <div class="control">
+                    <button class="button is-link" type="submit" id="signUpButton">Sign up</button>
+                </div>
+            </form>
+
+
+            <div id="connectedScreen" style="display:none">
+                <hr class="is-divider">
+                <h2 class="title is-5"><i class="fa-regular fa-user"></i> Unapproved Members</h2>
+                <ul id="unapprovedMembersList"></ul>
+
+                <br />
+                <p class="title is-5"><i class="fa-solid fa-user"></i> Members</p>
+                <ul id="membersList"></ul>
+
+                <!-- breaking line -->
+
+                <hr class="is-divider">
+                <br />
+                <h2 class="title is-5"><i class="fa-solid fa-scale-balanced"></i> Proposed Changes</h2>
+                <form id="createChangeForm">
+                    <div class="field">
+                        <label class="label">Propose change</label>
+                        <div class="control">
+                            <textarea class="textarea" id="createChangeDescription"
+                                placeholder="Enter description"></textarea>
+                        </div>
+                        <div class="control">
+                            <button class="button is-link" type="submit" id="createChangeButton">Propose
+                                change</button>
+                        </div>
+                    </div>
+                </form>
+                <ul id="changeList"></ul>
+
+                <br />
+                <h2 class="title is-5"><i class="fa-solid fa-scale-unbalanced-flip"></i> Approved Changes</h2>
+                <ul id="approvedChangeList"></ul>
+
+                <hr class="is-divider">
+                <br />
+                <h2 class="title is-5"><i class="fa-solid fa-calendar-days"></i></i> Current Events</h2>
+                <form id="createEvent">
+                    <div class="field">
+                        <label class="label">Create event</label>
+                        <div class="control">
+                            <input class="input" type="text" id="createEventTitle" placeholder="Enter title">
+                        </div>
+                        <div class="control">
+                            <textarea class="textarea" id="createEventDescription"
+                                placeholder="Enter description"></textarea>
+                        </div>
+                        <div class="control">
+                            <button class="button is-link" type="submit" id="createEventButton">Create event</button>
+                        </div>
+                    </div>
+                </form>
+
+                <ul id="eventList"></ul>
+
+
+                <br />
+                <h2 class="title is-5"><i class="fa-solid fa-calendar-check"></i> Closed Events</h2>
+                <ul id="closedEventList"></ul>
+
+
+                <hr class="is-divider">
+                <br />
+                <h2 class="title is-5"><i class="fa-regular fa-credit-card"></i> Unapproved Payments</h2>
+                <form id="createPayment">
+                    <div class="field">
+                        <label class="label">Propose payment</label>
+                        <div class="control">
+                            <input class="input" type="text" id="createPaymentRecipient"
+                                placeholder="Enter recipient address">
+                        </div>
+                        <div class="control">
+                            <input class="input" type="text" id="createPaymentAmount" placeholder="Enter amount">
+                        </div>
+                        <div class="control">
+                            <textarea class="textarea" id="createPaymentDescription"
+                                placeholder="Enter description"></textarea>
+                        </div>
+                        <div class="control">
+                            <button class="button is-link" type="submit" id="createPaymentButton">Propose
+                                payment</button>
+                        </div>
+                    </div>
+                </form>
+                <ul id="paymentList"></ul>
+
+                <br />
+                <h2 class="title is-5"><i class="fa-solid fa-credit-card"></i> Approved Payments</h2>
+                <ul id="approvedPaymentList"></ul>
 
 
 
-    <form id="signUp" style="display:none">
-        <label>Enter name to join</label>
-        <input type="text" id="nameInput" placeholder="Enter name">
-        <button type="submit" id="signUpButton">Sign up</button>
-    </form>
-    <div id="connectedScreen" style="display:none">
-        <!-- membership status -->
-
-        <p id="myName"></p>
-
-        <h2>Events</h2>
-        <form id="createEvent">
-            <label>Create event</label> <br />
-            <input type="text" id="createEventTitle" placeholder="Enter title"> <br />
-            <textarea id="createEventDescription" placeholder="Enter description"></textarea> <br />
-            <button type="submit" id="createEventButton">Create event</button>
-        </form>
-        <ul id="eventList"></ul>
-
-        <h2>Members</h2>
-        <ul id="membersList"></ul>
-
-        <script type="module" src="app.js"></script>
-
-    </div>
+            </div>
+        </div>
+    </section>
+    <script type="module" src="app.js"></script>
 </body>
 
 </html>

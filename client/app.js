@@ -1,11 +1,4 @@
-// import { ethers } from "https://cdn.ethers.io/lib/ethers-5.2.esm.min.js";
-
-const CONTRACT_ADDRESS = "0x6F0fDFBa064627156e6c2582a6bbb75D83907476";
-// const CONTRACT_ADDRESS = "0x9251dc15fe10f3b0176ed5fbb97fa93baa739075";
-
-// read from contract_abi.json
-
-console.log(ethers);
+const CONTRACT_ADDRESS = "0x1De33b730240B423aB4270E3ABf48035B0e311c1";
 
 document.addEventListener("DOMContentLoaded", async () => {
 
@@ -16,43 +9,37 @@ document.addEventListener("DOMContentLoaded", async () => {
         connectMetamaskButton.addEventListener("click", async () => {
             try {
                 console.log("connected: ", window.ethereum.isConnected())
-                // Request account access
                 await window.ethereum.request({ method: "eth_requestAccounts" });
 
-                // Fetch account from provider
                 const signer = await provider.getSigner();
                 console.log("signer: ", signer);
                 const account = await signer.getAddress();
 
-                // hide connect button
                 connectMetamaskButton.style.display = "none";
-                // change text of connectMetamaskLabel
                 const connectMetamaskLabel = document.getElementById("connectMetamaskLabel");
                 connectMetamaskLabel.innerHTML = `Connected to account: ${account}`;
 
-                // Fetch contract
                 const contract_abi_file = await fetch("./contract_abi.json");
                 const contract_abi = await contract_abi_file.json();
 
-                // create contract instance
                 const contract = new ethers.Contract(CONTRACT_ADDRESS, contract_abi, signer);
                 console.log("contract: ", contract);
-                // const contract_owner = await contract.owner();
-                // console.log("contract_owner: ", contract_owner);
 
-                // check if account is member
-                const memberAddresses = await contract.viewMemberAddresses();
-                if (memberAddresses.includes(account)) {
+                // CREATE MEMBER LIST
+                const members = await contract.viewAllMembers();
+                console.log("members: ", members);
+                if (members.map(member => member.addressOfMember).includes(account)) {
+                    // reveal connected screen
                     const connectedScreen = document.getElementById("connectedScreen");
                     connectedScreen.style.display = "block";
                     const myNameDiv = document.getElementById("myName");
-                    const myName = await contract.viewMemberName(account);
-                    myNameDiv.innerHTML = `Logged in as: ${myName}`;
+                    // add class="subtitle" to myNameDDiv
+                    const myName = members.filter(member => member.addressOfMember == account)[0].name;
+                    myNameDiv.innerHTML = `Registered as member: ${myName}`;
                 } else {
                     const signUpForm = document.getElementById("signUp");
                     signUpForm.style.display = "block";
                     signUpForm.addEventListener("submit", async (event) => {
-                        // send 0.001eth with transaction
                         event.preventDefault();
                         const name = document.getElementById("nameInput").value;
                         const signUp = await contract.requestToJoin(name, { value: ethers.utils.parseEther("0.001") });
@@ -60,25 +47,37 @@ document.addEventListener("DOMContentLoaded", async () => {
                         const connectedScreen = document.getElementById("connectedScreen");
                         connectedScreen.style.display = "block";
                         const myNameDiv = document.getElementById("myName");
-                        myNameDiv.innerHTML = `Logged in as: ${name}`;
+                        myNameDiv.innerHTML = `Registered as member: ${name}`;
                     });
                 }
-
-
-                // call viewMemberNames
-                const members = await contract.viewMemberNames();
-                console.log("members: ", members);
-                // create list of members
                 const membersList = document.getElementById("membersList");
-                members.forEach(member => {
+                members.filter(member => member.status.approved).forEach(member => {
                     const li = document.createElement("li");
-                    li.innerHTML = member;
+                    li.classList.add("list-item");
+                    li.innerHTML = member.addressOfMember + " - " + member.name;
                     membersList.appendChild(li);
+                });
+                const unapprovedMembersList = document.getElementById("unapprovedMembersList");
+                members.filter(member => !member.status.approved).forEach(member => {
+                    const li = document.createElement("li");
+                    li.classList.add("list-item");
+                    li.innerHTML = member.addressOfMember + " - " + member.name;
+                    // add approve button
+                    const approveButton = document.createElement("button");
+                    approveButton.classList.add('button', 'is-small', 'is-link');
+                    approveButton.innerHTML = "Approve";
+                    approveButton.addEventListener("click", async () => {
+                        const approve = await contract.voteToAddMember(member.addressOfMember);
+                        console.log("approve: ", approve);
+                    });
+                    li.appendChild(approveButton);
+                    unapprovedMembersList.appendChild(li);
+                });
+                if (unapprovedMembersList.innerHTML == "") {
+                    unapprovedMembersList.innerHTML = "No unapproved members";
                 }
-                );
 
-
-                // create list of events
+                // CREATE EVENT LIST
                 const createEventForm = document.getElementById("createEvent");
                 createEventForm.addEventListener("submit", async (event) => {
                     event.preventDefault();
@@ -91,18 +90,24 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const eventsList = document.getElementById("eventList");
                 const events = await contract.viewAllEvents();
                 console.log("events: ", events);
-                for (const daoEventNum in events) {
+                // open events
+                for (const daoEventNum in events.filter(event => event.stillOpen)) {
                     const daoEvent = events[daoEventNum];
                     console.log("daoEvent: ", daoEvent);
                     const li = document.createElement("li");
+                    li.classList.add("list-item");
+
                     let title = document.createElement('strong');
                     title.innerHTML = daoEvent.title;
                     li.appendChild(title);
+
                     let description = document.createElement('p');
+                    description.classList.add('content');
                     description.innerHTML = daoEvent.description;
                     li.appendChild(description);
-                    // join event button
+
                     let joinEventButton = document.createElement("button");
+                    joinEventButton.classList.add('button', 'is-small', 'is-link');
                     joinEventButton.innerHTML = "Join Event";
                     joinEventButton.addEventListener("click", async () => {
                         const joinEvent = await contract.joinEvent(event.id);
@@ -111,6 +116,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     li.appendChild(joinEventButton);
 
                     let attendeesLabel = document.createElement('p');
+                    attendeesLabel.classList.add('content');
                     attendeesLabel.innerHTML = "Attendees: ";
                     li.appendChild(attendeesLabel);
 
@@ -131,6 +137,151 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                     eventsList.appendChild(li);
                 }
+                // closed events
+                const closedEventList = document.getElementById("closedEventList");
+                for (const daoEventNum in events.filter(event => !event.stillOpen)) {
+                    const daoEvent = events[daoEventNum];
+                    console.log("daoEvent: ", daoEvent);
+                    const li = document.createElement("li");
+                    li.classList.add("list-item");
+
+                    let title = document.createElement('strong');
+                    title.innerHTML = daoEvent.title;
+                    li.appendChild(title);
+
+                    let description = document.createElement('p');
+                    description.classList.add('content');
+                    description.innerHTML = daoEvent.description;
+                    li.appendChild(description);
+
+                    // number of attendees
+                    let attendeesLabel = document.createElement('p');
+                    attendeesLabel.classList.add('content');
+                    attendeesLabel.innerHTML = "Number of attendees: ";
+                    li.appendChild(attendeesLabel);
+
+                    let attendees = document.createElement("span");
+                    attendees.innerHTML = daoEvent.members.length;
+                    li.appendChild(attendees);
+
+
+                    closedEventList.appendChild(li);
+                }
+                if (closedEventList.innerHTML == "") {
+                    closedEventList.innerHTML = "No unapproved events";
+                }
+
+                // CREATE CHANGE LIST
+                const createChangeForm = document.getElementById("createChangeForm");
+                createChangeForm.addEventListener("submit", async (event) => {
+                    event.preventDefault();
+                    const changeDescription = document.getElementById("createChangeDescription").value;
+                    const newChange = await contract.proposeChange(changeDescription);
+                    console.log("newChange: ", newChange);
+                });
+
+                const changesList = document.getElementById("changeList");
+                const changes = await contract.viewAllChanges();
+                console.log("changes: ", changes);
+                // open changes
+                for (const daoChangeNum in changes.filter(change => !change.status.approved)) {
+                    const daoChange = changes[daoChangeNum];
+                    console.log("daoChange: ", daoChange);
+                    const li = document.createElement("li");
+                    li.classList.add("list-item");
+
+                    let description = document.createElement('p');
+                    description.classList.add('content');
+                    description.innerHTML = daoChange.description;
+                    li.appendChild(description);
+
+                    let approveChangeButton = document.createElement("button");
+                    approveChangeButton.classList.add('button', 'is-small', 'is-link');
+                    approveChangeButton.innerHTML = "Approve Change";
+                    approveChangeButton.addEventListener("click", async () => {
+                        const approveChange = await contract.voteOnChange(daoChange.id);
+                        console.log("approveChange: ", approveChange);
+                    });
+                    li.appendChild(approveChangeButton);
+
+                    changesList.appendChild(li);
+                }
+                // closed changes
+                const approvedChangesList = document.getElementById("approvedChangeList");
+                for (const daoChangeNum in changes.filter(change => change.status.approved)) {
+                    const daoChange = changes[daoChangeNum];
+                    console.log("daoChange: ", daoChange);
+                    const li = document.createElement("li");
+                    li.classList.add("list-item");
+
+                    let description = document.createElement('p');
+                    description.classList.add('content');
+                    description.innerHTML = daoChange.description;
+                    li.appendChild(description);
+
+                    approvedChangesList.appendChild(li);
+                }
+                if (approvedChangesList.innerHTML == "") {
+                    approvedChangesList.innerHTML = "No approved changes";
+                }
+
+
+                // CREATE PAYMENT LIST
+                const createPaymentForm = document.getElementById("createPayment");
+                createPaymentForm.addEventListener("submit", async (event) => {
+                    event.preventDefault();
+                    const recipient = document.getElementById("createPaymentRecipient").value;
+                    const amount = document.getElementById("createPaymentAmount").value;
+                    const description = document.getElementById("createPaymentDescription").value;
+                    const newPayment = await contract.proposePayment(recipient, amount, description);
+                    console.log("newPayment: ", newPayment);
+                }
+                );
+
+                const paymentsList = document.getElementById("paymentList");
+                const payments = await contract.viewAllClubPayments();
+                console.log("payments: ", payments);
+                // open payments
+                for (const daoPaymentNum in payments.filter(payment => !payment.status.approved)) {
+                    const daoPayment = payments[daoPaymentNum];
+                    console.log("daoPayment: ", daoPayment);
+                    const li = document.createElement("li");
+                    li.classList.add("list-item");
+
+                    let description = document.createElement('p');
+                    description.classList.add('content');
+                    description.innerHTML = daoPayment.description;
+                    li.appendChild(description);
+
+                    let approvePaymentButton = document.createElement("button");
+                    approvePaymentButton.classList.add('button', 'is-small', 'is-link');
+                    approvePaymentButton.innerHTML = "Approve Payment";
+                    approvePaymentButton.addEventListener("click", async () => {
+                        const approvePayment = await contract.votePayment(daoPayment.id);
+                        console.log("approvePayment: ", approvePayment);
+                    });
+                    li.appendChild(approvePaymentButton);
+
+                    paymentsList.appendChild(li);
+                }
+                // closed payments
+                const approvedPaymentsList = document.getElementById("approvedPaymentList");
+                for (const daoPaymentNum in payments.filter(payment => payment.status.approved)) {
+                    const daoPayment = payments[daoPaymentNum];
+                    console.log("daoPayment: ", daoPayment);
+                    const li = document.createElement("li");
+                    li.classList.add("list-item");
+
+                    let description = document.createElement('p');
+                    description.classList.add('content');
+                    description.innerHTML = daoPayment.description;
+                    li.appendChild(description);
+
+                    approvedPaymentsList.appendChild(li);
+                }
+                if (approvedPaymentsList.innerHTML == "") {
+                    approvedPaymentsList.innerHTML = "No approved payments";
+                }
 
 
 
@@ -138,7 +289,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                 console.error(error);
             }
         });
-
     } else {
         console.log("No Ethereum browser extension detected, install MetaMask on desktop or visit from a dApp browser on mobile.");
     }
