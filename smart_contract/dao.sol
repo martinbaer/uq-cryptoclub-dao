@@ -1,12 +1,33 @@
 /* 
     SPDX-License-Identifier: Unlicensed 
 
-*/
+*/ 
 
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.17; 
 
 contract cryptoDAO {
-    // structs
+
+// structs
+
+    /* represents a poll */
+    struct Status {
+        bool initialized;
+        uint256 votes;
+        bool approved;
+    }
+
+    /* represents a club member
+       Includes member address, member name, voting power, 
+       votes to induct member into club, and record of who has voted for them already */
+    struct ClubMember {
+        address addressOfMember;
+        string name;
+        uint256 votes;
+        Status status;
+    }
+    mapping (address => mapping (address => uint256)) membershipVotesForFrom;
+
+    /* Represents a club event, like a picnic or bbq */
     struct ClubEvent {
         uint256 id;
         string title;
@@ -16,54 +37,57 @@ contract cryptoDAO {
         bool stillOpen;
     }
 
-    struct AddMemberVote {
-        address newMember;
-        string name;
-        uint256 votes;
-        mapping(address => uint256) votesCastByMembers;
-    }
-
+    /* Represents a proposed change for the club. 
+       Change will be approved on-chain and carried out off-chain. */
     struct ClubChange {
         uint256 id;
         string description;
-        uint256 votes;
-        bool accepted;
+        Status status;
     }
+    mapping (uint256 => mapping (address => uint256)) changeVotesForFrom;
 
+    /* Represents a payment proposal, which will be from this contract address to the proposed recipient for the stated amount.
+       Can be proposed by any club member, and requires 51% approval to happen. */
     struct ClubPayment {
         uint256 id;
         address recipient;
         uint256 amount;
         string description;
-        uint256 votes;
-        bool accepted;
+        Status status;
     }
+    mapping (uint256 => mapping (address => uint256)) paymentVotesForFrom;
 
+    /* Represents an election for the club, which:
+     - is started by a majority vote
+     - once the election is started, voting for the president is enabled 
+     - ends after a set period from the start
+     - anyone can be nominated as a candidate 
+     - keeps track of all votes candidates receive
+    */
     struct Election {
         uint256 electionId;
-        uint256 votesToStart;
         uint256 startTime;
         uint256 endTime;
+        Status status;
         bool votingEnabled;
-        mapping(address => uint256) presidentVotes;
+        address[] candidates;
+        mapping (address => uint256) votesReceivedByCandidate;
+        mapping (address => address) userVotedForCandidate;
     }
-    // end structs
+    mapping (uint256 => mapping (address => uint256)) electionVotesForFrom;
 
-    // JOINING THE CLUB
-
-    mapping(address => AddMemberVote) public approvalVotes;
-    event joinRequest(address member, string);
-    event newMemberAccepted(string name);
+// end structs
 
     // MEMBERS AND VOTING
-    address[] members;
-    mapping(address => string) memberAddressToName;
-    mapping(address => uint256) public userVotes;
-    uint256 public totalVotes = 0;
 
-    // CHANGES
-    mapping(uint256 => ClubChange) clubChanges; // id => clubChange
-    mapping(uint256 => mapping(address => uint256)) votesCastByMembersForChange; // change id => (voter => votes cast by voter)
+    ClubMember[] members;
+    mapping (address => ClubMember) addressToClubMember;
+    uint256 public totalVotes = 0;
+    event joinRequest(address member, string name);
+    event newMemberAccepted(string name);
+
+    // CHANGES 
+    mapping (uint256 => ClubChange) clubChanges; // id => clubChange
     uint256 changesCount = 0;
     event changeAccepted(uint256 id);
 
@@ -76,81 +100,90 @@ contract cryptoDAO {
     uint256 electionId = 0;
 
     // MONEY
-    ClubPayment[] public clubPayments; //
-    mapping(uint256 => mapping(address => uint256)) votesCastByMembersForPayment; // payment id => (voter => votes cast by voter)
+    ClubPayment[] clubPayments; // 
     uint256 public paymentsCount = 0;
     event paymentAccepted(uint256 id);
 
-    modifier memberOnly() {
-        require(userVotes[msg.sender] > 0, "you are not in the club");
+
+    modifier approvedOnly {
+        require(addressToClubMember[msg.sender].status.approved, "you are not an approved member");
         _;
     }
 
-    constructor() {
-        members.push(msg.sender);
+    constructor () {
+        Status memory membership;
+        membership.initialized = true;
+        membership.votes = 1;
+        membership.approved = true;
+
+        ClubMember memory creator = ClubMember(msg.sender, "satoshi", 1, membership);
+        members.push(creator);
+
         president = msg.sender;
-        memberAddressToName[msg.sender] = "satoshi";
-        userVotes[msg.sender] = 1;
         totalVotes = 1;
     }
 
-    function viewMemberName(address user) public view returns (string memory) {
-        return memberAddressToName[user];
-    }
 
-    function viewMemberAddresses() public view returns (address[] memory) {
-        return members;
-    }
+    // function viewAllMemberNames() public view returns (string[] memory) {
+    //     string[] memory names = new string[](members.length);
+    //     for (uint i = 0; i < members.length; i++) {
+    //         names[i] = memberAddressToName[members[i]];
+    //     }
+    //     return names;
+    // }
 
-    function viewMemberNames() public view returns (string[] memory) {
-        string[] memory names = new string[](members.length);
-        for (uint i = 0; i < members.length; i++) {
-            names[i] = memberAddressToName[members[i]];
-        }
-        return names;
-    }
+    // ===================================    MEMBERS    =================================== //
 
-    // ===================================    JOINING CLUB    =================================== //
+    function requestToJoin(string memory name) payable external {
+        require(msg.value >= 10**15 wei); // user must pay >10^15 wei == 0.001eth to request to join club, to prevent spam (works as entrance fee
 
-    function requestToJoin(string memory name) external payable {
-        require(msg.value >= 10 ** 15 wei); // user must pay >10^15 wei == 0.001eth to request to join club, to prevent spam (works as entrance fee)
-        approvalVotes[msg.sender].newMember = msg.sender;
-        approvalVotes[msg.sender].name = name;
-        approvalVotes[msg.sender].votes = 0;
+        Status memory membership;
+        membership.initialized = true;
+        membership.votes = 0;
+        membership.approved = false;
+
+        ClubMember memory newMember = ClubMember(msg.sender, name, 0, membership);
+        members.push(newMember);
+
         emit joinRequest(msg.sender, name);
     }
 
-    function voteToAddMember(address newMember) external memberOnly {
-        // if the current member has not yet cast a vote to induct the new member
-        require(
-            approvalVotes[newMember].votesCastByMembers[msg.sender] == 0,
-            "you have already voted to add this user"
-        );
-        // cast the votes
-        approvalVotes[newMember].votes += userVotes[msg.sender];
-        approvalVotes[newMember].votesCastByMembers[msg.sender] = userVotes[
-            msg.sender
-        ];
+    function voteToAddMember(address newMemberAddress) external approvedOnly {
 
-        if (
-            approvalVotes[newMember].votes > totalVotes / 2 &&
-            userVotes[newMember] == 0
-        ) {
+        ClubMember memory newMember = addressToClubMember[newMemberAddress];
+        // if the current member has not yet cast a vote to induct the new member
+        require(membershipVotesForFrom[newMemberAddress][msg.sender] == 0, "you have already voted to add this user");
+        // cast the votes
+        newMember.status.votes += userVotes(msg.sender);
+        membershipVotesForFrom[newMemberAddress][msg.sender] = userVotes(msg.sender);
+
+        if (newMember.status.votes > totalVotes/2 && !newMember.status.approved) {
+            newMember.status.approved = true;
+            newMember.votes = 1;
             members.push(newMember);
-            memberAddressToName[newMember] = approvalVotes[newMember].name;
-            userVotes[newMember] = 1;
             totalVotes++;
-            emit newMemberAccepted(memberAddressToName[newMember]);
+            emit newMemberAccepted(newMember.name);
         }
+        
     }
+
+    function viewAllMembers() public view returns (ClubMember[] memory) {
+        return members;
+    }
+
+    function viewMemberInfo(address user) public view returns (ClubMember memory) {
+        return addressToClubMember[user];
+    }
+
+    function userVotes(address userAddress) public view returns (uint256) {
+        return addressToClubMember[userAddress].votes;
+    }
+
 
     // ===================================    CLUB EVENTS    =================================== //
 
     // create a new event for the club which contains the creator, attendees, and whether it's still open.
-    function createEvent(
-        string memory title,
-        string memory description
-    ) external memberOnly returns (ClubEvent memory) {
+    function createEvent(string memory title, string memory description) external approvedOnly returns (ClubEvent memory) {
         ClubEvent memory newEvent;
         newEvent.title = title;
         newEvent.description = description;
@@ -160,18 +193,16 @@ contract cryptoDAO {
         return newEvent;
     }
 
-    function joinEvent(uint256 id) external memberOnly {
-        require(userVotes[msg.sender] > 0, "you are not in the club");
-        require(events[id].stillOpen, "event closed");
+    function joinEvent(uint256 id) external approvedOnly {
         require(events[id].stillOpen, "event closed");
         events[id].members.push(msg.sender);
-        if (userVotes[events[id].creator] < 10) {
-            userVotes[events[id].creator]++; // increases event creators voting weight
+        if (addressToClubMember[events[id].creator].votes < 10) {
+            addressToClubMember[events[id].creator].votes++; // increases event creators voting weight
             totalVotes++;
         }
     }
 
-    function closeEvent(uint256 id) external memberOnly {
+    function closeEvent(uint256 id) external approvedOnly {
         require(msg.sender == events[id].creator);
         events[id].stillOpen = false;
     }
@@ -180,21 +211,7 @@ contract cryptoDAO {
         return events;
     }
 
-    function viewOpenEvents() external view returns (ClubEvent[] memory) {
-        ClubEvent[] memory openEvents = new ClubEvent[](events.length);
-        uint count = 0;
-        for (uint i = 0; i < events.length; i++) {
-            if (events[i].stillOpen) {
-                openEvents[count] = events[i];
-                count++;
-            }
-        }
-        return openEvents;
-    }
-
-    function viewEventInfo(
-        uint256 id
-    ) external view returns (ClubEvent memory) {
+    function viewEventInfo(uint256 id) external view returns (ClubEvent memory) {
         return events[id];
     }
 
@@ -202,48 +219,52 @@ contract cryptoDAO {
         return events[id].title;
     }
 
-    function viewEventDescription(
-        uint256 id
-    ) external view returns (string memory) {
+    function viewEventDescription(uint256 id) external view returns (string memory) {
         return events[id].description;
     }
 
-    function viewEventAttendees(
-        uint256 id
-    ) external view returns (address[] memory) {
+    function viewEventAttendees(uint256 id) external view returns (address[] memory) {
         return events[id].members;
     }
 
+
+    // function viewOpenEvents() external view returns (ClubEvent[] memory) {
+    //     ClubEvent[] memory openEvents = new ClubEvent[](events.length);
+    //     uint count = 0;
+    //     for (uint i = 0; i < events.length; i++) {
+    //         if (events[i].stillOpen) {
+    //             openEvents[count] = events[i];
+    //             count++;
+    //         }
+    //     }
+    //     return openEvents;
+    // }
     // ===================================    CLUB CHANGES    =================================== //
 
-    function proposeChange(string memory description) external memberOnly {
+
+    function proposeChange(string memory description) external approvedOnly {
         uint256 id = changesCount;
 
-        ClubChange memory newChange = ClubChange(
-            id,
-            description,
-            userVotes[msg.sender],
-            false
-        );
-
-        votesCastByMembersForChange[id][msg.sender] = userVotes[msg.sender];
+        Status memory status;
+        status.initialized = true;
+        status.votes = userVotes(msg.sender);
+        changeVotesForFrom[id][msg.sender] = userVotes(msg.sender);
+        ClubChange memory newChange = ClubChange(id, description, status);
 
         clubChanges[id] = newChange;
-
         changesCount++;
     }
 
-    function voteOnChange(uint256 id) external memberOnly {
-        require(clubChanges[id].votes > 0, "change id does not exist!");
-        require(
-            votesCastByMembersForChange[id][msg.sender] == 0,
-            "you have already voted!"
-        );
-        require(!clubChanges[id].accepted, "change has already been accepted!");
-        clubChanges[id].votes += userVotes[msg.sender];
-        votesCastByMembersForChange[id][msg.sender] = userVotes[msg.sender];
-        if (clubChanges[id].votes > totalVotes / 2) {
-            clubChanges[id].accepted = true;
+
+    function voteOnChange(uint256 id) external approvedOnly {
+        require(clubChanges[id].status.initialized, "change id does not exist!");
+        require(!clubChanges[id].status.approved, "change has already been approved!");
+        require(changeVotesForFrom[id][msg.sender] == 0, "you have already voted!");
+
+        clubChanges[id].status.votes += userVotes(msg.sender);
+        changeVotesForFrom[id][msg.sender] = userVotes(msg.sender);
+        if (clubChanges[id].status.votes > totalVotes/2) {
+            clubChanges[id].status.approved = true;
             emit changeAccepted(id);
         }
     }
@@ -256,80 +277,54 @@ contract cryptoDAO {
     //     uint256 amount;
     //     string paymentDescription;
     //     uint256 votes;
-    //     bool accepted;
+    //     bool approved;
     // }
 
-    function proposeSpendClubETH(
-        address recipient,
-        uint256 amount,
-        string memory description
-    ) external memberOnly {
+    function proposeSpendClubETH(address recipient, uint256 amount, string memory description) external approvedOnly {
         uint256 id = paymentsCount;
 
-        ClubPayment memory newPayment = ClubPayment(
-            id,
-            recipient,
-            amount,
-            description,
-            userVotes[msg.sender],
-            false
-        );
-
-        votesCastByMembersForPayment[id][msg.sender] = userVotes[msg.sender];
-
+        Status memory status;
+        status.initialized = true;
+        status.votes = userVotes(msg.sender);
+        paymentVotesForFrom[id][msg.sender] = userVotes(msg.sender);
+        status.approved = userVotes(msg.sender) > totalVotes/2;
+        ClubPayment memory newPayment = ClubPayment(id, recipient, amount, description, status);
+        
         clubPayments[id] = newPayment;
-
         paymentsCount++;
     }
 
-    function voteSpendClubETH(uint256 paymentId) external memberOnly {
-        require(
-            clubPayments[paymentId].votes > 0,
-            "payment id does not exist!"
-        );
-        require(
-            votesCastByMembersForPayment[paymentId][msg.sender] == 0,
-            "you have already voted!"
-        );
-        require(
-            !clubPayments[paymentId].accepted,
-            "payment has already been accepted!"
-        );
-        clubPayments[paymentId].votes += userVotes[msg.sender];
-        votesCastByMembersForPayment[paymentId][msg.sender] = userVotes[
-            msg.sender
-        ];
-        if (clubPayments[paymentId].votes > totalVotes / 2) {
-            clubPayments[paymentId].accepted = true;
-            (bool success, ) = clubPayments[paymentId].recipient.call{
-                value: clubPayments[paymentId].amount
-            }("a payment from the UQ crypto club DAO");
-            require(success);
+    function voteSpendClubETH(uint256 paymentId) external approvedOnly {
+        require(clubPayments[paymentId].status.initialized, "payment id does not exist!");
+        require(!clubPayments[paymentId].status.approved, "payment has already been approved!");
+        require(paymentVotesForFrom[paymentId][msg.sender] == 0, "you have already voted!");
+        clubPayments[paymentId].status.votes += userVotes(msg.sender);
+        paymentVotesForFrom[paymentId][msg.sender] = userVotes(msg.sender);
+        if (clubPayments[paymentId].status.votes > totalVotes/2) {
+            clubPayments[paymentId].status.approved = true;
+            (bool success, ) = clubPayments[paymentId].recipient.call{value: clubPayments[paymentId].amount}("a payment from the UQ crypto club DAO");
+            require(success, "failed to send ETH to recipient, check if sufficient balance");
             emit paymentAccepted(paymentId);
         }
     }
 
-    function viewSpendETHProposalDescription(
-        uint256 proposalId
-    ) public view returns (string memory) {
-        return clubPayments[proposalId].description;
-    }
-
-    function viewSpendETHProposalVotes(
-        uint256 proposalId
-    ) public view returns (uint256) {
-        return clubPayments[proposalId].votes;
-    }
-
-    function viewSpendETHProposals()
-        public
-        view
-        returns (ClubPayment[] memory)
-    {
+    function viewAllSpendETHProposals() public view returns (ClubPayment[] memory) {
         return clubPayments;
     }
 
-    // function voteStartElection(bool start) external memberOnly {
+    function viewSpendETHProposal(uint256 id) public view returns (ClubPayment memory) {
+        return clubPayments[id];
+    }
+
+    function viewSpendETHProposalDescription(uint256 proposalId) public view returns (string memory) {
+        return clubPayments[proposalId].description;
+    }
+
+    function viewSpendETHProposalVotes(uint256 proposalId) public view returns (uint256) {
+        return clubPayments[proposalId].status.votes;
+    }
+
+    // function voteStartElection(bool start) external approvedOnly {
     //     if ()
     //     election.
     // }
@@ -343,21 +338,9 @@ contract cryptoDAO {
     //     mapping (address => uint256) presidentVotes;
     // }
 
-    // function voteForPresident(address candidate) external memberOnly {
+    // function voteForPresident(address candidate) external approvedOnly {
 
     // }
 
-    // ===================================    VIEW CLUB INFO    =================================== //
 
-    // not needed bc fields are public
-
-    // // view the members of the club
-    // function viewMembers() public view returns (address[] memory) {
-    //     return members;
-    // }
-
-    // // view how many votes a member has
-    // function viewMemberVotes(address member) public view returns (uint256) {
-    //     return userVotes[member];
-    // }
 }
