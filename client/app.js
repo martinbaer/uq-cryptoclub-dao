@@ -108,32 +108,16 @@ document.addEventListener("DOMContentLoaded", async () => {
                     title.innerHTML = daoEvent.title;
                     li.appendChild(title);
 
-                    let description = document.createElement('p');
+                    let description = document.createElement('span');
                     description.classList.add('content');
-                    description.innerHTML = daoEvent.description;
+                    description.innerHTML = ":    " + daoEvent.description;
                     li.appendChild(description);
 
-                    let joinEventButton = document.createElement("button");
-                    joinEventButton.classList.add('button', 'is-small', 'is-link');
-                    joinEventButton.innerHTML = "Join Event";
-                    joinEventButton.addEventListener("click", async () => {
-                        const joinEvent = await contract.joinEvent(event.id);
-                        console.log("joinEvent: ", joinEvent);
-                    });
-                    li.appendChild(joinEventButton);
-
-                    let attendeesLabel = document.createElement('p');
-                    attendeesLabel.classList.add('content');
-                    attendeesLabel.innerHTML = "Attendees: ";
-                    li.appendChild(attendeesLabel);
-
-                    let attendeesString = "";
+                    let attendeesString = "     Attendees: ";
                     for (const memberNum in daoEvent.members) {
                         const member = daoEvent.members[memberNum];
                         console.log("member: ", member)
-                        const memberName = await contract.viewMemberName(member);
-                        console.log(memberName);
-                        attendeesString = attendeesString + memberName + ", ";
+                        attendeesString = attendeesString + member.name + ", ";
                     }
                     console.log("attendeesString: ", attendeesString);
                     attendeesString = attendeesString.slice(0, -2);
@@ -141,6 +125,15 @@ document.addEventListener("DOMContentLoaded", async () => {
                     let attendees = document.createElement("span");
                     attendees.innerHTML = attendeesString
                     li.appendChild(attendees);
+
+                    let joinEventButton = document.createElement("button");
+                    joinEventButton.classList.add('button', 'is-small', 'is-link');
+                    joinEventButton.innerHTML = "Join Event";
+                    joinEventButton.addEventListener("click", async () => {
+                        const joinEvent = await contract.joinEvent(daoEvent.id);
+                        console.log("joinEvent: ", joinEvent);
+                    });
+                    li.appendChild(joinEventButton);
 
                     eventsList.appendChild(li);
                 }
