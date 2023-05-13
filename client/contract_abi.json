@@ -1,0 +1,679 @@
+[
+    {
+        "inputs": [],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "id",
+                "type": "uint256"
+            }
+        ],
+        "name": "changeAccepted",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "member",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "string",
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "name": "joinRequest",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "string",
+                "name": "name",
+                "type": "string"
+            }
+        ],
+        "name": "newMemberAccepted",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "id",
+                "type": "uint256"
+            }
+        ],
+        "name": "paymentAccepted",
+        "type": "event"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "name": "approvalVotes",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "newMember",
+                "type": "address"
+            },
+            {
+                "internalType": "string",
+                "name": "name",
+                "type": "string"
+            },
+            {
+                "internalType": "uint256",
+                "name": "votes",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "id",
+                "type": "uint256"
+            }
+        ],
+        "name": "closeEvent",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "name": "clubPayments",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "id",
+                "type": "uint256"
+            },
+            {
+                "internalType": "address",
+                "name": "recipient",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "string",
+                "name": "description",
+                "type": "string"
+            },
+            {
+                "internalType": "uint256",
+                "name": "votes",
+                "type": "uint256"
+            },
+            {
+                "internalType": "bool",
+                "name": "accepted",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "string",
+                "name": "title",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "description",
+                "type": "string"
+            }
+        ],
+        "name": "createEvent",
+        "outputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "uint256",
+                        "name": "id",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "string",
+                        "name": "title",
+                        "type": "string"
+                    },
+                    {
+                        "internalType": "string",
+                        "name": "description",
+                        "type": "string"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "creator",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address[]",
+                        "name": "members",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "bool",
+                        "name": "stillOpen",
+                        "type": "bool"
+                    }
+                ],
+                "internalType": "struct cryptoDAO.ClubEvent",
+                "name": "",
+                "type": "tuple"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "id",
+                "type": "uint256"
+            }
+        ],
+        "name": "joinEvent",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "paymentsCount",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "string",
+                "name": "description",
+                "type": "string"
+            }
+        ],
+        "name": "proposeChange",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "recipient",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "string",
+                "name": "description",
+                "type": "string"
+            }
+        ],
+        "name": "proposeSpendClubETH",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "string",
+                "name": "name",
+                "type": "string"
+            }
+        ],
+        "name": "requestToJoin",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "totalVotes",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "name": "userVotes",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "viewAllEvents",
+        "outputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "uint256",
+                        "name": "id",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "string",
+                        "name": "title",
+                        "type": "string"
+                    },
+                    {
+                        "internalType": "string",
+                        "name": "description",
+                        "type": "string"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "creator",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address[]",
+                        "name": "members",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "bool",
+                        "name": "stillOpen",
+                        "type": "bool"
+                    }
+                ],
+                "internalType": "struct cryptoDAO.ClubEvent[]",
+                "name": "",
+                "type": "tuple[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "id",
+                "type": "uint256"
+            }
+        ],
+        "name": "viewEventAttendees",
+        "outputs": [
+            {
+                "internalType": "address[]",
+                "name": "",
+                "type": "address[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "id",
+                "type": "uint256"
+            }
+        ],
+        "name": "viewEventDescription",
+        "outputs": [
+            {
+                "internalType": "string",
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "id",
+                "type": "uint256"
+            }
+        ],
+        "name": "viewEventInfo",
+        "outputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "uint256",
+                        "name": "id",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "string",
+                        "name": "title",
+                        "type": "string"
+                    },
+                    {
+                        "internalType": "string",
+                        "name": "description",
+                        "type": "string"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "creator",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address[]",
+                        "name": "members",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "bool",
+                        "name": "stillOpen",
+                        "type": "bool"
+                    }
+                ],
+                "internalType": "struct cryptoDAO.ClubEvent",
+                "name": "",
+                "type": "tuple"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "id",
+                "type": "uint256"
+            }
+        ],
+        "name": "viewEventTitle",
+        "outputs": [
+            {
+                "internalType": "string",
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "viewMemberAddresses",
+        "outputs": [
+            {
+                "internalType": "address[]",
+                "name": "",
+                "type": "address[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "user",
+                "type": "address"
+            }
+        ],
+        "name": "viewMemberName",
+        "outputs": [
+            {
+                "internalType": "string",
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "viewMemberNames",
+        "outputs": [
+            {
+                "internalType": "string[]",
+                "name": "",
+                "type": "string[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "viewOpenEvents",
+        "outputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "uint256",
+                        "name": "id",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "string",
+                        "name": "title",
+                        "type": "string"
+                    },
+                    {
+                        "internalType": "string",
+                        "name": "description",
+                        "type": "string"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "creator",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address[]",
+                        "name": "members",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "bool",
+                        "name": "stillOpen",
+                        "type": "bool"
+                    }
+                ],
+                "internalType": "struct cryptoDAO.ClubEvent[]",
+                "name": "",
+                "type": "tuple[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "proposalId",
+                "type": "uint256"
+            }
+        ],
+        "name": "viewSpendETHProposalDescription",
+        "outputs": [
+            {
+                "internalType": "string",
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "proposalId",
+                "type": "uint256"
+            }
+        ],
+        "name": "viewSpendETHProposalVotes",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "viewSpendETHProposals",
+        "outputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "uint256",
+                        "name": "id",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "recipient",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "string",
+                        "name": "description",
+                        "type": "string"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "votes",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "bool",
+                        "name": "accepted",
+                        "type": "bool"
+                    }
+                ],
+                "internalType": "struct cryptoDAO.ClubPayment[]",
+                "name": "",
+                "type": "tuple[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "id",
+                "type": "uint256"
+            }
+        ],
+        "name": "voteOnChange",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "paymentId",
+                "type": "uint256"
+            }
+        ],
+        "name": "voteSpendClubETH",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "newMember",
+                "type": "address"
+            }
+        ],
+        "name": "voteToAddMember",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    }
+]

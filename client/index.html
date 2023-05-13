@@ -5,11 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UQ CryptoClub DAO</title>
+    <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js" type="application/javascript"></script>
 </head>
 
 <body>
-    <button id="connectButton">Connect to MetaMask</button>
-    <h2 id="account"></h2>
+    <!-- connect with metamask -->
+    <label id="connectMetamaskLabel">Set MetaMask's network to Optimism Goerli Testnet</label>
+    <button id="connectMetamaskButton">Connect with MetaMask</button>
+    <h4>Members</h4>
+    <ul id="membersList"></ul>
 
     <script type="module" src="app.js"></script>
 </body>
