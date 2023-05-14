@@ -31,7 +31,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const president = await contract.viewPresident();
                 console.log("president: ", president);
                 const presidentDiv = document.getElementById("president");
-                presidentDiv.innerHTML = `President: ${president.addressOfMember} - ${president.name}`;
+                presidentDiv.classList.add("title", "is-6");
+                presidentDiv.innerHTML = `Current President: ${president.name} - ${president.addressOfMember}`;
                 
                 // CREATE MEMBER LIST
                 const members = await contract.viewAllMembers();

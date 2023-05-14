@@ -45,6 +45,7 @@ contract cryptoDAO {
        Change will be approved on-chain and carried out off-chain. */
     struct ClubChange {
         uint256 id;
+        address creator;
         string description;
         Status status;
     }
@@ -162,13 +163,6 @@ contract cryptoDAO {
         ClubMember memory newMember = ClubMember(numMembers, msg.sender, name, 0, membership);
         members.push(newMember);
 
-        // members[numMembers].id = numMembers;
-        // members[numMembers].addressOfMember = msg.sender;
-        // members[numMembers].name = "name";
-        // members[numMembers].votes = 0;
-        // members[numMembers].status.initialized = true;
-        // members[numMembers].status.votes = 0;
-        // members[numMembers].status.approved = false;
         addressToMemberID[msg.sender] = newMember.id;
 
         numMembers++;
@@ -284,7 +278,7 @@ contract cryptoDAO {
         status.initialized = true;
         status.votes = userVotes(msg.sender);
         changeVotesForFrom[id][msg.sender] = userVotes(msg.sender);
-        ClubChange memory newChange = ClubChange(id, description, status);
+        ClubChange memory newChange = ClubChange(id, msg.sender, description, status);
 
         clubChanges.push(newChange);
         changesCount++;
@@ -299,6 +293,10 @@ contract cryptoDAO {
         clubChanges[id].status.votes += userVotes(msg.sender);
         changeVotesForFrom[id][msg.sender] = userVotes(msg.sender);
         if (clubChanges[id].status.votes > totalVotes/2) {
+            if (members[addressToMemberID[clubChanges[id].creator]].votes < 10) {
+                members[events[id].creator.id].votes++;
+                totalVotes++;
+            }
             clubChanges[id].status.approved = true;
             emit changeAccepted(id);
         }
@@ -407,6 +405,10 @@ contract cryptoDAO {
         election.winner = president;
         elections.push(election);
 
+        if (members[addressToMemberID[president]].votes < 10) {
+            members[addressToMemberID[president]].votes++;
+            totalVotes++;
+        }
 
         delete election;
         electionId++;
@@ -463,15 +465,6 @@ contract cryptoDAO {
         return block.timestamp > nextDecay;
     }
 
-
-    // struct Election {
-    //     uint256 electionId;
-    //     uint256 votesToStart
-    //     uint256 startTime;
-    //     uint256 endTime;
-    //     bool votingEnabled;
-    //     mapping (address => uint256) presidentVotes;
-    // }
 
 
 
