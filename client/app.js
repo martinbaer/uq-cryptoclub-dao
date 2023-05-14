@@ -128,7 +128,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     li.appendChild(attendees);
                     
                     let joinEventButton = document.createElement("button");
-                    joinEventButton.classList.add('button', 'is-small', 'is-link', 'mx-2');
+                    joinEventButton.classList.add('button', 'is-small', 'is-info', 'mx-2');
                     joinEventButton.innerHTML = "Join Event";
                     joinEventButton.addEventListener("click", async () => {
                         const joinEvent = await contract.joinEvent(daoEvent.id);
@@ -203,6 +203,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                     description.innerHTML = `id: ${daoChange.id} -> ${daoChange.description} (${daoChange.status.votes}/${neededVotes} votes) `;
                     li.appendChild(description);
                     
+                    let progressBar = document.createElement('progress');
+                    progressBar.classList.add('progress', 'is-primary');
+                    progressBar.value = daoChange.status.votes;
+                    progressBar.max = neededVotes;
+                    li.appendChild(progressBar);
+                    // <progress class="progress is-primary" value="15" max="100">15%</progress>
+
+
                     let approveChangeButton = document.createElement("button");
                     approveChangeButton.classList.add('button', 'is-small', 'is-link', 'mt-0', 'mb-3');
                     approveChangeButton.innerHTML = "Approve Change";
@@ -216,8 +224,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
                 // closed changes
                 const approvedChangesList = document.getElementById("approvedChangeList");
-                for (const daoChangeNum in changes.filter(change => change.status.approved)) {
-                    const daoChange = changes[daoChangeNum];
+                for (const daoChange of changes.filter(change => change.status.approved)) {
                     console.log("daoChange: ", daoChange);
                     const li = document.createElement("li");
                     li.classList.add("list-item");
@@ -226,6 +233,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                     description.classList.add('content');
                     description.innerHTML = `id: ${daoChange.id} -> ${daoChange.description}`;
                     li.appendChild(description);
+
+                    li.innerHTML += `<progress class="progress is-success" value="1" max="1"></progress>`;
+
                     
                     approvedChangesList.appendChild(li);
                 }
@@ -250,7 +260,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const payments = await contract.viewAllClubPayments();
                 console.log("payments: ", payments);
                 // open payments
-
+                
                 totalVotes = await contract.totalVotes();
                 neededVotes = Math.floor(totalVotes / 2) + 1;
                 for (const daoPayment of payments.filter(payment => !payment.status.approved)) {
@@ -263,6 +273,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                     description.innerHTML = `id: ${daoPayment.id} -> recipient: ${daoPayment.recipient}, amount: ${daoPayment.amount/(Math.pow(10,18))}eth - ${daoPayment.description} (${daoPayment.status.votes}/${neededVotes} votes)`;
                     li.appendChild(description);
                     
+                    let progressBar = document.createElement('progress');
+                    progressBar.classList.add('progress', 'is-primary');
+                    progressBar.value = daoPayment.status.votes;
+                    progressBar.max = neededVotes;
+                    li.appendChild(progressBar);
+                    // <progress class="progress is-primary" value="15" max="100">15%</progress>
+
                     let approvePaymentButton = document.createElement("button");
                     approvePaymentButton.classList.add('button', 'is-small', 'is-link');
                     approvePaymentButton.innerHTML = "Approve Payment";
@@ -285,6 +302,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     description.classList.add('content');
                     description.innerHTML = `id: ${daoPayment.id} -> recipient: ${daoPayment.recipient}, amount: ${daoPayment.amount/(Math.pow(10,18))}eth - ${daoPayment.description}`;
                     li.appendChild(description);
+                    li.innerHTML += `<progress class="progress is-success" value="1" max="1"></progress>`;
                     
                     approvedPaymentsList.appendChild(li);
                 }
@@ -325,15 +343,45 @@ document.addEventListener("DOMContentLoaded", async () => {
                 
                 // finalize election
                 const finalizeElectionForm = document.getElementById("finalizeElection");
-                finalizeElectionForm.style.display = "block"; // todo
-                // if (await contract.isElectionWaitingToBeFinalized()) { // todo
-                //     // show
-                //     finalizeElectionForm.style.display = "block";
-                // }
+                finalizeElectionForm.style.display = "none"; // todo
+                if (await contract.isElectionWaitingToBeFinalized()) { // todo
+                    // show
+                    finalizeElectionForm.style.display = "block";
+                }
                 finalizeElectionForm.addEventListener("submit", async (event) => {
                     event.preventDefault();
                     const finalizeElection = await contract.finalizeElection();
                     console.log("finalizeElection: ", finalizeElection);
+                });
+                
+                // view all election
+                const viewAllElectionsForm = document.getElementById("viewAllElections");
+                const viewAllElectionsDiv = document.getElementById("viewAllElectionsDiv");
+                viewAllElectionsForm.style.display = "block"; 
+                viewAllElectionsForm.addEventListener("submit", async (event) => {
+                    event.preventDefault();
+                    const pastElections = await contract.viewAllElections();
+                    console.log("pastElections: ", pastElections);
+                    let i = 0;
+                    viewAllElectionsDiv.classList.add("content", "box", "mt-2", "pt-3");
+                    let list = document.createElement('ul');
+                    viewAllElectionsDiv.innerHTML = "";
+                    viewAllElectionsDiv.appendChild(list);
+                    
+                    pastElections.forEach(async election => {
+                        const li = document.createElement("li");
+                        li.classList.add("list-item");
+                        
+                        let description = document.createElement('p');
+                        description.classList.add('content');
+                        let member = await contract.addressToClubMember(election.winner);
+                        description.innerHTML = `Election ${i} winner: ${member.name}`;
+                        li.appendChild(description);
+                        
+                        list.appendChild(li);
+                
+                        i++;
+                    });
                 });
                 
                 
@@ -347,8 +395,27 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
                 votingDecayForm.addEventListener("submit", async (event) => {
                     event.preventDefault();
-                    const decayVotes = await contract.decay();
-                    console.log("finalizeElection: ", decayVotes);
+                    const decayVotes = await contract.triggerVotesDecay();
+                    console.log("voting decay: ", decayVotes);
+                });
+
+
+
+                // more info
+                const userLookupForm = document.getElementById("userLookup");
+                const userLookupField = document.getElementById("userLookupAddress");
+                const userLookupButton = document.getElementById("userLookupButton");
+                userLookupForm.addEventListener("submit", async (event) => {
+                    event.preventDefault();
+                    const clubMember = await contract.addressToClubMember(userLookupField.value);
+                    console.log("ClubMember: ", clubMember);
+                    const userLookupDiv = document.getElementById("clubMemberInfo");
+                    userLookupDiv.innerHTML = `Member ID: ${clubMember.id}\n`;
+                    userLookupDiv.innerHTML += `<p>Member Address: ${clubMember.addressOfMember}\n<\p>`;
+                    userLookupDiv.innerHTML += `<p>Member Name: ${clubMember.name}\n<\p>`;
+                    userLookupDiv.innerHTML += `<p>Member Votes: ${clubMember.votes}\n<\p>`;
+                    userLookupDiv.innerHTML += `<p>Member Approved: ${clubMember.status.approved}\n<\p>`;
+                    
                 });
                 
                 

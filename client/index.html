@@ -157,7 +157,7 @@
                 <br />
                 <hr class="is-divider">
                 <br />
-                <h2 class="title is-5"><i class="fa-solid fa-crown"></i> President Voting</h2>
+                <h2 class="title is-5"><i class="fa-solid fa-crown"></i> President Elections</h2>
                 <form id="startElection">
                     <div class="field">
                         <label class="label" id="startElectionLabel">Start election</label>
@@ -199,6 +199,18 @@
                         </div>
                     </form>
                     
+                    <!-- view all elections form -->
+                    <form id="viewAllElections">
+                        <div class="field">
+                            <label class="label">View Past Elections</label>
+                            <div class="control">
+                                <button class="button is-link" type="submit" id="viewAllElectionsButton">Enter</button>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="viewAllElectionsDiv" class=""></div>
+                    
+                    
                     
                     <!-- VOTE DECAY -->
                     
@@ -214,8 +226,8 @@
                             </div>
                         </div>
                     </form> 
-
-
+                    
+                    
                     <!-- MORE INFO -->
                     
                     <br />
@@ -233,7 +245,11 @@
                             </div>
                         </div>
                     </form> 
-                    
+                    <div class="columns is-centered">
+                        <div class="column is-three-fifths">
+                            <div class="box" id="clubMemberInfo"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
